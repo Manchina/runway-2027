@@ -3,10 +3,10 @@ import { useRunway } from '../context/RunwayContext';
 import {
   Flame,
   Clock,
-  PlusCircle,
+  Plus,
   Database,
-  AlertTriangle,
-  Cloud,
+  Zap,
+  Sparkles,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -69,69 +69,72 @@ export const Header: React.FC<HeaderProps> = ({
   const isActiveToday = lastCompletedDate === todayStr;
 
   return (
-    <header className="border-b border-slate-850 bg-slate-950/90 backdrop-blur-xl sticky top-0 z-30 px-4 sm:px-6 lg:px-8 py-3 transition-all font-sans">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-        {/* Brand & Mission Tag */}
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-400 via-indigo-500 to-purple-600 p-[1.5px] flex items-center justify-center shadow-lg shadow-emerald-500/10 shrink-0">
-            <div className="h-full w-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <span className="font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-indigo-400 text-sm tracking-wider">
-                R'27
-              </span>
+    <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl px-4 sm:px-6 lg:px-8 py-2.5 transition-all">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        {/* Brand & Mission */}
+        <div className="flex items-center justify-between md:justify-start gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 via-indigo-500 to-cyan-400 p-[1.5px] shadow-lg shadow-indigo-500/10">
+                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                  <span className="font-mono font-black text-xs bg-gradient-to-r from-emerald-400 to-indigo-400 bg-clip-text text-transparent">
+                    R27
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-bold text-sm sm:text-base tracking-tight text-white font-mono flex items-center gap-1.5">
+                  RUNWAY 2027
+                </h1>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-semibold">
+                  v2.0 Command Deck
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 hidden sm:block">
+                Dual-Track Algorithmic Recall &amp; Distributed Systems Engineering
+              </p>
             </div>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-bold text-base md:text-lg tracking-tight text-white flex items-center gap-2 font-mono">
-                RUNWAY 2027
-              </h1>
-              {/* Cloud Sync Status Indicator */}
-              <button
-                type="button"
-                onClick={onOpenCloudModal}
-                title={`Click to configure AWS Lambda & DynamoDB settings. Status: ${cloudStatus}`}
-                className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-mono border transition-all cursor-pointer ${
-                  isCloudConnected
-                    ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
-                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'
-                }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isCloudConnected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
-                  }`}
-                />
-                <span>{isCloudConnected ? 'AWS DynamoDB' : 'Local Storage'}</span>
-              </button>
+
+          {/* Mobile Streak & Overdue Badge */}
+          <div className="flex items-center gap-2 md:hidden font-mono text-xs">
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border ${
+              isActiveToday ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-slate-900 border-slate-800 text-slate-400'
+            }`}>
+              <Flame className={`w-3.5 h-3.5 ${isActiveToday ? 'text-amber-400 fill-amber-400 animate-pulse' : 'text-slate-500'}`} />
+              <span className="font-bold">{streakCount}d</span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Quantitative Systems &amp; Low-Latency Engineering Runway
-            </p>
           </div>
         </div>
 
-        {/* Controls & Metrics Bar */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-start md:justify-end">
-          {/* T-Minus Clock */}
-          <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-800 text-xs font-mono shadow-inner">
-            <Clock className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="text-slate-400 text-[10px] uppercase">T-Minus:</span>
-            <span className="text-white font-semibold">
-              {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
+        {/* Action Controls & Real-Time Status Deck */}
+        <div className="flex flex-wrap items-center gap-2 justify-between md:justify-end">
+          {/* T-Minus Countdown */}
+          <div
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono shadow-sm"
+            title="Countdown to January 1, 2027 quantitative engineering pivot milestone"
+          >
+            <Clock className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            <span className="text-slate-500 text-[10px] uppercase font-semibold">T-MINUS</span>
+            <span className="text-white font-bold tracking-tight">
+              {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m {timeLeft.seconds}s
             </span>
           </div>
 
-          {/* Daily Streak */}
+          {/* Daily Streak Counter */}
           <div
-            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs font-mono transition-all ${
+            className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all ${
               isActiveToday
-                ? 'bg-amber-500/10 border-amber-500/40 text-amber-300 shadow-sm shadow-amber-500/10'
-                : 'bg-slate-900/80 border-slate-800 text-slate-400'
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 shadow-sm shadow-amber-500/5'
+                : 'bg-slate-900/90 border-slate-800 text-slate-400'
             }`}
             title={
               isActiveToday
-                ? "Streak intact! You've logged activity today."
-                : 'Keep the streak alive: log at least 1 problem or HLD deliverable.'
+                ? `Streak active! (${streakCount} days logged)`
+                : 'Log at least 1 solve today to keep the streak alive!'
             }
           >
             <Flame
@@ -141,57 +144,66 @@ export const Header: React.FC<HeaderProps> = ({
             />
             <div className="flex items-center gap-1">
               <span className="font-bold text-white text-xs">{streakCount}</span>
-              <span className="text-[10px] text-slate-400 uppercase">Streak</span>
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Day Streak</span>
             </div>
           </div>
 
-          {/* Overdue Queue Alert */}
+          {/* Overdue Alert Badge */}
           {overdueReviews.length > 0 && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono font-semibold animate-pulse">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-300 text-xs font-mono font-bold animate-pulse">
+              <Zap className="w-3.5 h-3.5 text-rose-400" />
               <span>{overdueReviews.length} Overdue</span>
             </div>
           )}
 
+          {/* Cloud Status Pill */}
+          <button
+            type="button"
+            onClick={onOpenCloudModal}
+            title={`Cloud connection status: ${cloudStatus}. Click to configure.`}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-mono border transition-all cursor-pointer ${
+              isCloudConnected
+                ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
+                : 'bg-slate-900/90 text-slate-400 border-slate-800 hover:border-slate-700'
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isCloudConnected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'
+              }`}
+            />
+            <span className="text-[11px] font-semibold">{isCloudConnected ? 'DynamoDB' : 'Offline'}</span>
+          </button>
+
           {/* Action Buttons */}
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={onOpenLogModal}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md shadow-emerald-950/50 transition-all active:scale-95 cursor-pointer font-mono"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Log Problem</span>
-            </button>
-
-            <button
-              onClick={onOpenCloudModal}
-              title="AWS Cloud & Bot Shield Settings"
-              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
-                isCloudConnected
-                  ? 'bg-emerald-950/30 text-emerald-400 border-emerald-500/30 hover:bg-emerald-950/50'
-                  : 'bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border-slate-800'
-              }`}
-            >
-              <Cloud className="w-4 h-4" />
-            </button>
+            {dsaProblems.length === 0 && (
+              <button
+                onClick={loadDemoData}
+                className="px-2.5 py-1.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-800/40 text-xs font-mono flex items-center gap-1 transition-all cursor-pointer"
+                title="Load sample grind history"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Demo Data</span>
+              </button>
+            )}
 
             <button
               onClick={onOpenBackupModal}
-              title="Backup / Restore JSON State"
-              className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-all cursor-pointer"
+              title="Backup & Restore JSON"
+              className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-all cursor-pointer"
             >
               <Database className="w-4 h-4" />
             </button>
 
-            {dsaProblems.length === 0 && (
-              <button
-                onClick={loadDemoData}
-                title="Load sample grind history to explore all features"
-                className="px-2.5 py-1.5 rounded-lg bg-indigo-950/50 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-800/40 text-xs font-mono transition-all cursor-pointer"
-              >
-                Demo Data
-              </button>
-            )}
+            {/* Primary Action: Log Solve */}
+            <button
+              onClick={onOpenLogModal}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold font-mono shadow-md shadow-emerald-950/60 transition-all active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Log Solve</span>
+            </button>
           </div>
         </div>
       </div>

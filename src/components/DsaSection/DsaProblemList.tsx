@@ -13,6 +13,8 @@ import {
   FileText,
   Clock,
   Filter,
+  Code2,
+  X,
 } from 'lucide-react';
 
 interface DsaProblemListProps {
@@ -27,9 +29,9 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
   const { dsaProblems, deleteDsaProblem } = useRunway();
 
   const [search, setSearch] = useState('');
-  const [tierFilter, setTierFilter] = useState<'all' | 'unsolved' | '1' | '2' | '3' | 'pending'>(
-    'all'
-  );
+  const [tierFilter, setTierFilter] = useState<
+    'all' | 'unsolved' | 'solved' | '1' | '2' | '3' | 'pending' | 'Easy' | 'Medium' | 'Hard'
+  >('all');
   const [expandedNotesId, setExpandedNotesId] = useState<string | null>(null);
 
   // Map syllabus problems merged with logged data
@@ -85,9 +87,12 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
       if (!matchName && !matchNum && !matchPattern && !matchWeek) return false;
     }
 
-    // Tier / Status filter
+    // Tier / Difficulty / Status filter
     if (tierFilter === 'unsolved') {
       return !item.loggedEntry;
+    }
+    if (tierFilter === 'solved') {
+      return Boolean(item.loggedEntry);
     }
     if (tierFilter === '1') {
       return item.loggedEntry?.struggleTier === 1;
@@ -101,61 +106,92 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
     if (tierFilter === 'pending') {
       return item.loggedEntry?.reviewStatus === 'pending';
     }
+    if (tierFilter === 'Easy' || tierFilter === 'Medium' || tierFilter === 'Hard') {
+      return item.difficulty === tierFilter;
+    }
 
     return true;
   });
 
   return (
-    <div className="bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+    <div className="bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-slate-800/80 rounded-2xl overflow-hidden shadow-lg">
       {/* Controls Header */}
-      <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900">
+      <div className="p-4 border-b border-slate-800 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-slate-900/90">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-bold text-white tracking-wide">
-            NEETCODE LOG &amp; SYLLABUS
-          </h2>
-          <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
-            {filteredItems.length} items
-          </span>
+          <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <Code2 className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-bold text-white tracking-wide uppercase font-mono">
+                NeetCode Problem Bank
+              </h2>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-semibold">
+                {filteredItems.length} Problems
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Search & Filter Bar */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
           {/* Search */}
-          <div className="relative flex-1 sm:w-48">
+          <div className="relative flex-1 sm:w-56">
             <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
             <input
               type="text"
-              placeholder="Search problems..."
+              placeholder="Search by name, #, pattern..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-slate-950 border border-slate-800 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              className="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
             />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-2 top-2 text-slate-500 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Tier Filter dropdown */}
-          <div className="flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-slate-500" />
+          {/* Filter dropdown */}
+          <div className="flex items-center gap-1.5 w-full sm:w-auto">
+            <Filter className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             <select
               value={tierFilter}
               onChange={(e) => setTierFilter(e.target.value as any)}
-              className="px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-800 rounded-lg text-slate-300 focus:outline-none focus:border-indigo-500 font-mono"
+              className="w-full sm:w-auto px-2.5 py-1.5 text-xs bg-slate-950 border border-slate-800 rounded-xl text-slate-300 focus:outline-none focus:border-indigo-500 font-mono cursor-pointer"
             >
-              <option value="all">All Statuses</option>
+              <option value="all">All Statuses &amp; Difficulties</option>
+              <option value="solved">Solved Only</option>
               <option value="unsolved">Unsolved Only</option>
+              <option value="pending">Review Pending (48h)</option>
               <option value="1">Tier 1: Cold Solve</option>
-              <option value="2">Tier 2: Hints</option>
-              <option value="3">Tier 3: Replay</option>
-              <option value="pending">Review Pending</option>
+              <option value="2">Tier 2: Hints Assisted</option>
+              <option value="3">Tier 3: Video Replay</option>
+              <option value="Easy">Easy Difficulty</option>
+              <option value="Medium">Medium Difficulty</option>
+              <option value="Hard">Hard Difficulty</option>
             </select>
           </div>
         </div>
       </div>
 
       {/* Problems List */}
-      <div className="divide-y divide-slate-850 max-h-[540px] overflow-y-auto">
+      <div className="divide-y divide-slate-850/80 max-h-[580px] overflow-y-auto">
         {filteredItems.length === 0 ? (
-          <div className="py-12 text-center text-xs text-slate-500 font-mono">
-            No problems match the current filter criteria.
+          <div className="py-16 text-center text-xs text-slate-500 font-mono space-y-2">
+            <div>No problems match the current filter criteria.</div>
+            <button
+              onClick={() => {
+                setSearch('');
+                setTierFilter('all');
+              }}
+              className="text-indigo-400 hover:underline cursor-pointer"
+            >
+              Clear filters
+            </button>
           </div>
         ) : (
           filteredItems.map((item) => {
@@ -166,7 +202,7 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
             return (
               <div
                 key={item.id}
-                className={`p-3 transition-colors ${
+                className={`p-3.5 transition-colors ${
                   isSolved
                     ? logged?.struggleTier === 1
                       ? 'bg-emerald-950/10 hover:bg-emerald-950/20'
@@ -177,7 +213,7 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">
-                  {/* Left: Problem Number + Title + Pattern */}
+                  {/* Left: Problem Number + Title + Pattern + Badges */}
                   <div className="flex items-center gap-3 min-w-0">
                     <span
                       className={`font-mono text-xs font-bold w-12 shrink-0 ${
@@ -188,7 +224,7 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
                     </span>
 
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <a
                           href={item.leetcodeUrl}
                           target="_blank"
@@ -199,26 +235,30 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
                           <ExternalLink className="w-3 h-3 shrink-0 text-slate-500" />
                         </a>
                         <span
-                          className={`text-[9px] font-mono px-1.5 py-0.2 rounded shrink-0 ${
+                          className={`text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded shrink-0 border ${
                             item.difficulty === 'Easy'
-                              ? 'text-emerald-400 bg-emerald-500/10'
+                              ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
                               : item.difficulty === 'Medium'
-                              ? 'text-amber-400 bg-amber-500/10'
-                              : 'text-rose-400 bg-rose-500/10'
+                              ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                              : 'text-rose-400 bg-rose-500/10 border-rose-500/20'
                           }`}
                         >
                           {item.difficulty}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-mono">
-                        {item.weekNumber > 0 && <span>Week {item.weekNumber}</span>}
+                      <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500 font-mono">
+                        {item.weekNumber > 0 && (
+                          <span className="px-1.5 py-0.2 rounded bg-slate-900 text-slate-400 border border-slate-800">
+                            W{item.weekNumber}
+                          </span>
+                        )}
                         <span>&bull;</span>
-                        <span>{item.pattern}</span>
+                        <span className="text-slate-400">{item.pattern}</span>
                         {logged && (
                           <>
                             <span>&bull;</span>
-                            <span className="text-slate-400">
+                            <span className="text-slate-500">
                               Logged {new Date(logged.dateLogged).toLocaleDateString()}
                             </span>
                           </>
@@ -232,42 +272,43 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
                     {logged ? (
                       <div className="flex items-center gap-2">
                         {/* Tier Status Badge */}
-                        <div
+                        <button
+                          type="button"
                           onClick={() => onLogProblemWithId(item.id)}
                           title="Click to edit struggle tier or notes"
-                          className={`px-2 py-1 rounded text-[11px] font-mono font-semibold flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 ${
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold flex items-center gap-1.5 cursor-pointer transition-all hover:scale-105 border ${
                             logged.struggleTier === 1
-                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-sm shadow-emerald-950/50'
                               : logged.struggleTier === 2
-                              ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                              : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                              ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                              : 'bg-rose-500/15 text-rose-300 border-rose-500/30'
                           }`}
                         >
                           {logged.struggleTier === 1 && (
                             <>
-                              <CheckCircle className="w-3 h-3 text-emerald-400" />
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
                               <span>Tier 1 (Cold)</span>
                             </>
                           )}
                           {logged.struggleTier === 2 && (
                             <>
-                              <AlertTriangle className="w-3 h-3 text-amber-400" />
+                              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
                               <span>Tier 2 (Hints)</span>
                             </>
                           )}
                           {logged.struggleTier === 3 && (
                             <>
-                              <Tv className="w-3 h-3 text-rose-400" />
+                              <Tv className="w-3.5 h-3.5 text-rose-400" />
                               <span>Tier 3 (Replay)</span>
                             </>
                           )}
-                        </div>
+                        </button>
 
                         {/* Review Status Pill */}
                         {logged.reviewStatus === 'pending' && (
                           <span
-                            title="48-Hour Review Pending"
-                            className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse flex items-center gap-1"
+                            title="48-Hour Review Pending in Friction Queue"
+                            className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse flex items-center gap-1 font-semibold"
                           >
                             <Clock className="w-2.5 h-2.5" />
                             Review
@@ -276,7 +317,7 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
                         {logged.reviewStatus === 'cleared' && (
                           <span
                             title="Review Cleared on Blank Canvas!"
-                            className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                            className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold"
                           >
                             Cleared
                           </span>
@@ -288,7 +329,11 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
                             onClick={() =>
                               setExpandedNotesId(isNotesOpen ? null : item.id)
                             }
-                            className="p-1 rounded text-slate-400 hover:text-white"
+                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                              isNotesOpen
+                                ? 'bg-indigo-950/60 border-indigo-500/40 text-indigo-300'
+                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                            }`}
                             title="Toggle notes"
                           >
                             <FileText className="w-3.5 h-3.5" />
@@ -298,8 +343,8 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
                         {/* Delete entry */}
                         <button
                           onClick={() => deleteDsaProblem(logged.id)}
-                          className="p-1 rounded text-slate-600 hover:text-rose-400 transition-colors"
-                          title="Delete logged entry"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-900 transition-colors cursor-pointer"
+                          title="Delete logged solve"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -308,9 +353,9 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
                       /* Unsolved Problem: Quick Log Trigger */
                       <button
                         onClick={() => onLogProblemWithId(item.id)}
-                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-mono flex items-center gap-1 transition-all cursor-pointer"
+                        className="px-3 py-1 rounded-xl bg-slate-900 hover:bg-emerald-950/40 hover:border-emerald-500/40 border border-slate-800 text-slate-300 hover:text-emerald-300 text-xs font-mono flex items-center gap-1 transition-all cursor-pointer shadow-sm"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5 text-emerald-400" />
                         <span>Log Solve</span>
                       </button>
                     )}
@@ -319,9 +364,10 @@ export const DsaProblemList: React.FC<DsaProblemListProps> = ({
 
                 {/* Expanded Notes Preview */}
                 {isNotesOpen && logged?.notes && (
-                  <div className="mt-2.5 p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-mono text-slate-300 whitespace-pre-wrap">
-                    <div className="text-[10px] font-bold uppercase text-slate-500 mb-1">
-                      Problem Notes &amp; Invariants:
+                  <div className="mt-3 p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-slate-300 whitespace-pre-wrap">
+                    <div className="text-[10px] font-bold uppercase text-indigo-400 mb-1 flex items-center gap-1">
+                      <FileText className="w-3 h-3" />
+                      <span>Engineering Invariants &amp; Notes:</span>
                     </div>
                     {logged.notes}
                   </div>

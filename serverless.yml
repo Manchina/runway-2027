@@ -61,6 +61,14 @@ resources:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5
 
+    # 2. Permission to allow public invocation of the Lambda Function URL
+    ApiLambdaInvokePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !GetAtt ApiLambdaFunction.Arn
+        Action: lambda:InvokeFunction
+        Principal: '*'
+
   Outputs:
     LambdaFunctionUrl:
       Description: "AWS Lambda API Function URL"

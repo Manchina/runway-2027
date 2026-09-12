@@ -1,0 +1,68 @@
+service: runway-2027
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 256
+  timeout: 10
+  environment:
+    DYNAMO_TABLE: runway_2027
+    RUNWAY_API_KEY: ${env:RUNWAY_API_KEY, 'runway-shield-secret-key-2027'}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - !GetAtt RunwayTable.Arn
+            - !Sub "${RunwayTable.Arn}/index/*"
+
+package:
+  individually: true
+  patterns:
+    - '!**'
+
+functions:
+  api:
+    handler: index.handler
+    package:
+      artifact: backend/dist/lambda.zip
+    url:
+      cors: true
+
+resources:
+  Resources:
+    # 1. DynamoDB Table (Always-Free Tier Provisioned)
+    RunwayTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: runway_2027
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
+        BillingMode: PROVISIONED
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+
+  Outputs:
+    LambdaFunctionUrl:
+      Description: "AWS Lambda API Function URL"
+      Value: !GetAtt ApiLambdaFunctionUrl.FunctionUrl
+

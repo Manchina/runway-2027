@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Runway 2027 - 100% AWS Serverless Native Cockpit (Always-Free Tier)
+
+Parameters:
+  RunwayApiKey:
+    Type: String
+    NoEcho: true
+    Description: Secret shield key for x-runway-key header (rejects bot traffic)
+    Default: 'change-me-to-a-secret-key'
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+
+Resources:
+  # 1. DynamoDB Table (Always-Free Tier Provisioned)
+  RunwayTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: runway_2027
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  # 2. AWS Lambda Function with Hard Concurrency Cap (2)
+  RunwayApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: runway-api
+      CodeUri: dist/
+      Handler: index.handler
+      ReservedConcurrentExecutions: 2 # Hard-cap to prevent bot bill spikes
+      Environment:
+        Variables:
+          DYNAMO_TABLE: !Ref RunwayTable
+          RUNWAY_API_KEY: !Ref RunwayApiKey
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RunwayTable
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - '*'
+          AllowMethods:
+            - '*'
+          AllowHeaders:
+            - '*'
+
+Outputs:
+  FunctionUrl:
+    Description: 'Public URL for AWS Lambda API'
+    Value: !GetAtt RunwayApiFunctionUrl.FunctionUrl
+  DynamoTableName:
+    Description: 'DynamoDB Table Name'
+    Value: !Ref RunwayTable

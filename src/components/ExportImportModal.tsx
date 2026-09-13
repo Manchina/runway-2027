@@ -1,226 +1,48 @@
-import React, { useState, useRef } from 'react';
-import { useRunway } from '../context/RunwayContext';
-import {
-  X,
-  Download,
-  Upload,
-  Trash2,
-  CheckCircle2,
-  AlertTriangle,
-  FileJson,
-  Sparkles,
-} from 'lucide-react';
+import { useRef, useState, type ChangeEvent } from "react"
+import { AlertTriangle, CheckCircle2, Download, FileJson, RotateCcw, Sparkles, Upload } from "lucide-react"
+import { useRunway } from "@/context/RunwayContext"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Separator } from "@/components/ui/separator"
 
-interface ExportImportModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+interface Props { isOpen: boolean; onClose: () => void }
 
-export const ExportImportModal: React.FC<ExportImportModalProps> = ({ isOpen, onClose }) => {
-  const {
-    exportStateJson,
-    importStateJson,
-    resetToDefaults,
-    loadDemoData,
-    dsaProblems,
-    hldWeeks,
-  } = useRunway();
-
-  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  if (!isOpen) return null;
-
-  const handleDownloadBackup = () => {
+export function ExportImportModal({ isOpen, onClose }: Props) {
+  const { exportStateJson, importStateJson, resetToDefaults, loadDemoData, dsaProblems, hldWeeks } = useRunway()
+  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const download = () => {
     try {
-      const json = exportStateJson();
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const now = new Date();
-      const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const filename = `runway_backup_${timestamp}.json`;
+      const blob = new Blob([exportStateJson()], { type: "application/json" })
+      const href = URL.createObjectURL(blob)
+      const anchor = document.createElement("a")
+      anchor.href = href; anchor.download = `runway_backup_${new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)}.json`; anchor.click()
+      URL.revokeObjectURL(href)
+      setMessage({ text: "Backup downloaded successfully.", type: "success" })
+    } catch (error) { setMessage({ text: error instanceof Error ? error.message : "Backup failed.", type: "error" }) }
+  }
+  const upload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => { const result = importStateJson(String(reader.result)); setMessage({ text: result.message, type: result.success ? "success" : "error" }) }
+    reader.onerror = () => setMessage({ text: "Could not read that file.", type: "error" })
+    reader.readAsText(file); event.target.value = ""
+  }
+  const reset = () => { if (window.confirm("Reset every local progress record? This cannot be undone.")) { resetToDefaults(); setMessage({ text: "Progress reset to defaults.", type: "success" }) } }
 
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      setMessage({
-        text: `Exported state successfully as ${filename}!`,
-        type: 'success',
-      });
-    } catch (e: any) {
-      setMessage({
-        text: `Failed to export state: ${e.message}`,
-        type: 'error',
-      });
-    }
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result as string;
-      const res = importStateJson(content);
-      if (res.success) {
-        setMessage({ text: res.message, type: 'success' });
-      } else {
-        setMessage({ text: res.message, type: 'error' });
-      }
-    };
-    reader.onerror = () => {
-      setMessage({ text: 'Error reading file', type: 'error' });
-    };
-    reader.readAsText(file);
-
-    // Reset input value
-    e.target.value = '';
-  };
-
-  const handleReset = () => {
-    if (
-      window.confirm(
-        'Are you sure you want to reset all progress? This will wipe logged DSA problems and reset HLD weeks to fresh state.'
-      )
-    ) {
-      resetToDefaults();
-      setMessage({ text: 'All state reset to defaults.', type: 'success' });
-    }
-  };
-
-  const handleLoadDemo = () => {
-    loadDemoData();
-    setMessage({
-      text: 'Demo grind history loaded! Check the 48-Hour Friction Queue and Pattern Matrix.',
-      type: 'success',
-    });
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-      <div className="bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              <FileJson className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-white font-mono">Data Migration &amp; State Engine</h2>
-              <p className="text-xs text-slate-400">Export, import, or load demo state</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="p-6 space-y-4">
-          {message && (
-            <div
-              className={`p-3.5 rounded-2xl border text-xs font-mono flex items-center gap-2 ${
-                message.type === 'success'
-                  ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-300'
-                  : 'bg-rose-950/30 border-rose-500/40 text-rose-300'
-              }`}
-            >
-              {message.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-              ) : (
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
-              )}
-              <span>{message.text}</span>
-            </div>
-          )}
-
-          <div className="p-3.5 bg-slate-950 rounded-2xl border border-slate-800 text-xs font-mono text-slate-400 space-y-1.5">
-            <div className="flex justify-between">
-              <span>Logged DSA Problems:</span>
-              <span className="text-white font-bold">{dsaProblems.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>HLD Weeks Configured:</span>
-              <span className="text-white font-bold">{hldWeeks.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Target Pivot Date:</span>
-              <span className="text-emerald-400 font-bold">January 1, 2027</span>
-            </div>
-          </div>
-
-          {/* Export Action */}
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-xs font-bold text-white">Export Local State</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Download all progress, review queues, notes &amp; diagram links as a JSON file.
-              </p>
-            </div>
-            <button
-              onClick={handleDownloadBackup}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white text-xs font-mono font-semibold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 cursor-pointer shadow-md"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export</span>
-            </button>
-          </div>
-
-          {/* Import Action */}
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-xs font-bold text-white">Import / Restore Backup</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Upload a previously saved <code className="text-indigo-300">runway_backup_*.json</code> file to hydrate state.
-              </p>
-            </div>
-            <div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept=".json"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-mono font-semibold flex items-center gap-1.5 shrink-0 transition-all active:scale-95 cursor-pointer border border-slate-700"
-              >
-                <Upload className="w-3.5 h-3.5 text-slate-300" />
-                <span>Upload</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Demo Data & Factory Reset */}
-          <div className="pt-3 flex items-center justify-between border-t border-slate-800 gap-2">
-            <button
-              onClick={handleLoadDemo}
-              className="px-3.5 py-2 rounded-xl bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-300 border border-indigo-800/40 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Load Demo Data</span>
-            </button>
-
-            <button
-              onClick={handleReset}
-              className="px-3.5 py-2 rounded-xl bg-rose-950/20 hover:bg-rose-950/40 text-rose-400 border border-rose-900/40 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Wipe State</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+  return <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
+    <DialogContent className="sm:max-w-xl">
+      <DialogHeader><DialogTitle className="flex items-center gap-2"><FileJson className="size-4" />Backup &amp; restore</DialogTitle><DialogDescription>Move your Runway state between browsers or restore a clean starting point.</DialogDescription></DialogHeader>
+      {message ? <Alert variant={message.type === "error" ? "destructive" : "default"}>{message.type === "error" ? <AlertTriangle /> : <CheckCircle2 />}<AlertTitle>{message.type === "error" ? "Action failed" : "Complete"}</AlertTitle><AlertDescription>{message.text}</AlertDescription></Alert> : null}
+      <div className="grid grid-cols-2 gap-3"><Card><CardHeader><CardDescription>Problems logged</CardDescription><CardTitle className="text-2xl">{dsaProblems.length}</CardTitle></CardHeader></Card><Card><CardHeader><CardDescription>Design studies</CardDescription><CardTitle className="text-2xl">{hldWeeks.length}</CardTitle></CardHeader></Card></div>
+      <Card><CardHeader><CardTitle>Portable JSON backup</CardTitle><CardDescription>Includes practice logs, recall dates, notes, and design progress.</CardDescription></CardHeader><CardContent className="flex flex-wrap gap-2"><Button onClick={download}><Download data-icon="inline-start" />Export backup</Button><input ref={inputRef} type="file" accept=".json" className="hidden" onChange={upload} /><Button variant="outline" onClick={() => inputRef.current?.click()}><Upload data-icon="inline-start" />Import backup</Button></CardContent></Card>
+      <Separator />
+      <div className="space-y-3"><div><h3 className="font-medium">Utilities</h3><p className="text-sm text-muted-foreground">These actions replace current local state.</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={loadDemoData}><Sparkles data-icon="inline-start" />Load demo data</Button><Button variant="destructive" onClick={reset}><RotateCcw data-icon="inline-start" />Reset progress</Button></div></div>
+      <DialogFooter><Badge variant="secondary" className="mr-auto">Target: Jan 1, 2027</Badge><Button variant="outline" onClick={onClose}>Done</Button></DialogFooter>
+    </DialogContent>
+  </Dialog>
+}

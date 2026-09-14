@@ -20,7 +20,13 @@ export type PatternName =
   | 'Heap / Priority Queue'
   | 'Backtracking'
   | 'Graphs'
-  | '1-D DP';
+  | 'Advanced Graphs'
+  | '1-D DP'
+  | '2-D DP'
+  | 'Greedy'
+  | 'Intervals'
+  | 'Math & Geometry'
+  | 'Bit Manipulation';
 
 export interface DsaProblemEntry {
   id: string; // e.g. "neetcode-1"
@@ -62,7 +68,9 @@ export interface HldWeekEntry {
 export interface SyllabusDsaProblem {
   id: string;
   weekNumber: number;
-  day: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri';
+  day: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
+  /** ISO date at 09:00 Asia/Kolkata. This is the date the problem should be solved. */
+  scheduledDate: string;
   title: string;
   leetcodeNumber: number;
   pattern: PatternName;

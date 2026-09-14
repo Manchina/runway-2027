@@ -1,5 +1,6 @@
 import React from 'react';
 import { Activity, Code2, Layers, Zap, ArrowUpRight, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { TOTAL_DSA_PROBLEMS } from '../../data/initialDsaCurriculum';
 
 export interface ExecutiveMetrics {
   totalDsa: number;
@@ -101,7 +102,7 @@ export const ExecutiveStats: React.FC<ExecutiveStatsProps> = ({ metrics, onSelec
             <span className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-white">
               {metrics.totalDsa}
             </span>
-            <span className="text-xs font-mono text-slate-500">/ 75 Curated</span>
+            <span className="text-xs font-mono text-slate-500">/ {TOTAL_DSA_PROBLEMS} Curated</span>
           </div>
           <span className="text-xs font-mono font-bold text-emerald-400">
             {metrics.dsaProgressPct}% Done
@@ -113,17 +114,17 @@ export const ExecutiveStats: React.FC<ExecutiveStatsProps> = ({ metrics, onSelec
           {metrics.totalDsa > 0 ? (
             <>
               <div
-                style={{ width: `${(metrics.tier1Count / 75) * 100}%` }}
+                style={{ width: `${(metrics.tier1Count / TOTAL_DSA_PROBLEMS) * 100}%` }}
                 className="h-full bg-emerald-500"
                 title={`Tier 1 Cold: ${metrics.tier1Count}`}
               />
               <div
-                style={{ width: `${(metrics.tier2Count / 75) * 100}%` }}
+                style={{ width: `${(metrics.tier2Count / TOTAL_DSA_PROBLEMS) * 100}%` }}
                 className="h-full bg-amber-500"
                 title={`Tier 2 Hints: ${metrics.tier2Count}`}
               />
               <div
-                style={{ width: `${(metrics.tier3Count / 75) * 100}%` }}
+                style={{ width: `${(metrics.tier3Count / TOTAL_DSA_PROBLEMS) * 100}%` }}
                 className="h-full bg-rose-500"
                 title={`Tier 3 Replay: ${metrics.tier3Count}`}
               />

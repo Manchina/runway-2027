@@ -9,7 +9,7 @@ describe('Executive Metrics & Quant Readiness Calculations', () => {
     const tier3Count = dsaProblems.filter((p) => p.struggleTier === 3).length;
 
     const coldSolveRate = totalDsa > 0 ? Math.round((tier1Count / totalDsa) * 100) : 0;
-    const dsaProgressPct = Math.round((totalDsa / 75) * 100);
+    const dsaProgressPct = Math.round((totalDsa / 150) * 100);
 
     const hldMastered = hldWeeks.filter((w) => w.status === 'mastered').length;
     const hldDiagrammed = hldWeeks.filter(

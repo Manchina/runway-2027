@@ -1,6 +1,6 @@
 import React from 'react';
 import type { DsaProblemEntry, HldWeekEntry } from '../../types';
-import { SYLLABUS_DSA_PROBLEMS } from '../../data/initialDsaCurriculum';
+import { SYLLABUS_DSA_PROBLEMS, TOTAL_DSA_PROBLEMS } from '../../data/initialDsaCurriculum';
 import { BrainCircuit, Target, CheckCircle2, TrendingUp, Sparkles, Layers } from 'lucide-react';
 
 interface AnalyticsChartsProps {
@@ -164,12 +164,12 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({ dsaProblems, h
                   Difficulty Mastery Arc
                 </h3>
                 <p className="text-[11px] text-slate-400">
-                  NeetCode 75 curated syllabus breakdown
+                  NeetCode 150 curated syllabus breakdown
                 </p>
               </div>
             </div>
             <span className="text-[11px] font-mono text-slate-400">
-              {easySolved + medSolved + hardSolved} / 75 Curated
+              {easySolved + medSolved + hardSolved} / {TOTAL_DSA_PROBLEMS} Curated
             </span>
           </div>
 

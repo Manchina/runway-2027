@@ -1,5 +1,11 @@
 export type StruggleTier = 1 | 2 | 3;
 export type ReviewStatus = 'not_needed' | 'pending' | 'cleared';
+export type ReviewOutcome = 'passed' | 'failed' | 'snoozed';
+
+export interface ReviewAttempt {
+  reviewedAt: string;
+  outcome: ReviewOutcome;
+}
 export type HldStatus = 'not_started' | 'reading' | 'diagrammed' | 'mastered';
 
 export type PatternName =
@@ -26,6 +32,9 @@ export interface DsaProblemEntry {
   dateLogged: string; // ISO String
   scheduledReviewDate: string | null; // ISO String (Logged Date + 48h if Tier 2 or 3)
   reviewStatus: ReviewStatus;
+  /** Index into the spaced-repetition intervals. Older saved entries safely default to 0. */
+  reviewStage?: number;
+  reviewHistory?: ReviewAttempt[];
   notes?: string;
   difficulty?: 'Easy' | 'Medium' | 'Hard';
   weekNumber?: number;

@@ -36,6 +36,7 @@ const getYesterdayDateString = () => {
   d.setDate(d.getDate() - 1);
   return d.toISOString().split('T')[0];
 };
+const reviewIntervalsHours = [48, 7 * 24, 21 * 24, 60 * 24];
 
 async function recordDailyActivity() {
   const meta = await getStreakMeta();
@@ -110,6 +111,8 @@ app.post('/api/dsa', async (c) => {
       dateLogged: now.toISOString(),
       scheduledReviewDate,
       reviewStatus: isNeedsReview ? 'pending' : 'not_needed',
+      reviewStage: 0,
+      reviewHistory: [],
       notes,
       difficulty,
       weekNumber: weekNumber ? Number(weekNumber) : undefined,
@@ -134,9 +137,14 @@ app.patch('/api/dsa/:id/clear', async (c) => {
       return c.json({ success: false, error: 'Problem not found' }, 404);
     }
 
+    const nextStage = (target.reviewStage || 0) + 1;
+    const nextInterval = reviewIntervalsHours[nextStage];
     const updated: Omit<DsaItem, 'pk' | 'sk'> = {
       ...target,
-      reviewStatus: 'cleared',
+      reviewStatus: nextInterval ? 'pending' : 'cleared',
+      reviewStage: nextStage,
+      scheduledReviewDate: nextInterval ? new Date(Date.now() + nextInterval * 60 * 60 * 1000).toISOString() : null,
+      reviewHistory: [...(target.reviewHistory || []), { reviewedAt: new Date().toISOString(), outcome: 'passed' }],
     };
 
     await putDsaProblem(updated);
@@ -162,9 +170,31 @@ app.patch('/api/dsa/:id/fail', async (c) => {
     const updated: Omit<DsaItem, 'pk' | 'sk'> = {
       ...target,
       reviewStatus: 'pending',
+      reviewStage: 0,
       scheduledReviewDate: nextReview,
+      reviewHistory: [...(target.reviewHistory || []), { reviewedAt: new Date().toISOString(), outcome: 'failed' }],
     };
 
+    await putDsaProblem(updated);
+    return c.json({ success: true, data: updated });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+app.patch('/api/dsa/:id/schedule', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const { action } = await c.req.json();
+    const target = (await getAllDsaProblems()).find((p) => p.id === id);
+    if (!target) return c.json({ success: false, error: 'Problem not found' }, 404);
+    const isSnooze = action === 'snooze';
+    const updated: Omit<DsaItem, 'pk' | 'sk'> = {
+      ...target,
+      reviewStatus: 'pending',
+      scheduledReviewDate: new Date(Date.now() + (isSnooze ? 24 : 0) * 60 * 60 * 1000).toISOString(),
+      reviewHistory: isSnooze ? [...(target.reviewHistory || []), { reviewedAt: new Date().toISOString(), outcome: 'snoozed' }] : target.reviewHistory,
+    };
     await putDsaProblem(updated);
     return c.json({ success: true, data: updated });
   } catch (error: any) {

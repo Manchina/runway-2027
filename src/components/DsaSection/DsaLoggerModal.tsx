@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 interface Props { isOpen: boolean; onClose: () => void; preselectedProblemId?: string }
 const tiers: Array<{ value: StruggleTier; title: string; detail: string; review: string }> = [
-  { value: 1, title: "Cold solve", detail: "Independent within 30 minutes, without hints.", review: "No review needed" },
+  { value: 1, title: "Cold solve", detail: "Independent within 30 minutes, without hints.", review: "Optional recall anytime" },
   { value: 2, title: "Hint assisted", detail: "A pattern or text hint unlocked the solution.", review: "Recall in 48 hours" },
   { value: 3, title: "Solution replay", detail: "A full explanation or implementation was needed.", review: "Recall in 48 hours" },
 ]

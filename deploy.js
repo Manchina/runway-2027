@@ -26,12 +26,12 @@ async function main() {
 
   // Step 3: Deploy AWS Serverless Stack (DynamoDB, Lambda, S3, CloudFront)
   console.log('\n[3/4] ☁️ Deploying AWS resources via Serverless Framework...');
-  run('npx serverless deploy');
+  run('npx serverless@3 deploy');
 
   // Step 4: Sync frontend static files to S3
   console.log('\n[4/4] 🚀 Syncing frontend to S3 & CloudFront...');
   try {
-    const infoOutput = execSync('npx serverless info --verbose', { encoding: 'utf-8' });
+    const infoOutput = execSync('npx serverless@3 info --verbose', { encoding: 'utf-8' });
     const bucketMatch = infoOutput.match(/FrontendBucketName:\s*([^\s\r\n]+)/);
     const cloudFrontMatch = infoOutput.match(/CloudFrontUrl:\s*([^\s\r\n]+)/);
     const lambdaUrlMatch = infoOutput.match(/LambdaFunctionUrl:\s*([^\s\r\n]+)/);

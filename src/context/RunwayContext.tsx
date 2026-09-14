@@ -33,6 +33,8 @@ interface RunwayContextType {
   deleteDsaProblem: (id: string) => void;
   markProblemCleared: (id: string) => void;
   failProblemReview: (id: string) => void;
+  scheduleProblemForReview: (id: string) => void;
+  snoozeProblemReview: (id: string) => void;
   updateHldWeek: (weekNumber: number, updates: Partial<HldWeekEntry>) => void;
   toggleHldChecklistItem: (weekNumber: number, itemKey: keyof HldWeekChecklist) => void;
   exportStateJson: () => string;
@@ -47,6 +49,9 @@ const STORAGE_KEYS = {
   STREAK: 'runway_2027_streak_v1',
   LAST_DATE: 'runway_2027_last_date_v1',
 };
+
+// First assisted recall is in 48 hours; successful recalls then stretch out.
+const REVIEW_INTERVALS_HOURS = [48, 7 * 24, 21 * 24, 60 * 24] as const;
 
 const RunwayContext = createContext<RunwayContextType | undefined>(undefined);
 
@@ -268,9 +273,15 @@ export const RunwayProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setDsaProblems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
+          const nextStage = (item.reviewStage ?? 0) + 1;
+          const nextInterval = REVIEW_INTERVALS_HOURS[nextStage];
+          const reviewHistory = [...(item.reviewHistory ?? []), { reviewedAt: new Date().toISOString(), outcome: 'passed' as const }];
           return {
             ...item,
-            reviewStatus: 'cleared',
+            reviewStatus: nextInterval ? 'pending' : 'cleared',
+            reviewStage: nextStage,
+            scheduledReviewDate: nextInterval ? new Date(Date.now() + nextInterval * 60 * 60 * 1000).toISOString() : null,
+            reviewHistory,
           };
         }
         return item;
@@ -292,7 +303,9 @@ export const RunwayProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return {
             ...item,
             reviewStatus: 'pending',
+            reviewStage: 0,
             scheduledReviewDate: nextReview,
+            reviewHistory: [...(item.reviewHistory ?? []), { reviewedAt: new Date().toISOString(), outcome: 'failed' }],
           };
         }
         return item;
@@ -302,6 +315,23 @@ export const RunwayProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (runwayApi.isConfigured()) {
       runwayApi.failDsaReview(id).catch(console.warn);
     }
+  };
+
+  const scheduleProblemForReview = (id: string) => {
+    const dueNow = new Date().toISOString();
+    setDsaProblems((prev) => prev.map((item) => item.id === id ? {
+      ...item, reviewStatus: 'pending', reviewStage: item.reviewStage ?? 0, scheduledReviewDate: dueNow,
+    } : item));
+    if (runwayApi.isConfigured()) runwayApi.scheduleDsaReview(id, 'now').catch(console.warn);
+  };
+
+  const snoozeProblemReview = (id: string) => {
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    setDsaProblems((prev) => prev.map((item) => item.id === id ? {
+      ...item, reviewStatus: 'pending', scheduledReviewDate: tomorrow,
+      reviewHistory: [...(item.reviewHistory ?? []), { reviewedAt: new Date().toISOString(), outcome: 'snoozed' }],
+    } : item));
+    if (runwayApi.isConfigured()) runwayApi.scheduleDsaReview(id, 'snooze').catch(console.warn);
   };
 
   const updateHldWeek = (weekNumber: number, updates: Partial<HldWeekEntry>) => {
@@ -530,6 +560,8 @@ export const RunwayProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         deleteDsaProblem,
         markProblemCleared,
         failProblemReview,
+        scheduleProblemForReview,
+        snoozeProblemReview,
         updateHldWeek,
         toggleHldChecklistItem,
         exportStateJson,

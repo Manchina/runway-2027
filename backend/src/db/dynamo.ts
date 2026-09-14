@@ -29,6 +29,8 @@ export interface DsaItem {
   dateLogged: string;
   scheduledReviewDate: string | null;
   reviewStatus: 'not_needed' | 'pending' | 'cleared';
+  reviewStage?: number;
+  reviewHistory?: Array<{ reviewedAt: string; outcome: 'passed' | 'failed' | 'snoozed' }>;
   notes?: string;
   difficulty?: 'Easy' | 'Medium' | 'Hard';
   weekNumber?: number;

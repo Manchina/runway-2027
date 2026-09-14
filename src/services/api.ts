@@ -113,6 +113,14 @@ export const runwayApi = {
     return res.data;
   },
 
+  scheduleDsaReview: async (id: string, action: 'now' | 'snooze') => {
+    const res = await request<{ success: boolean; data: DsaProblemEntry }>(
+      `/api/dsa/${id}/schedule`,
+      { method: 'PATCH', body: JSON.stringify({ action }) }
+    );
+    return res.data;
+  },
+
   deleteDsaProblem: async (id: string) => {
     return request<{ success: boolean; message: string }>(`/api/dsa/${id}`, {
       method: 'DELETE',

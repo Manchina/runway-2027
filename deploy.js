@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const AWS_PROFILE = process.env.AWS_PROFILE || 'personal';
 
 function run(cmd, cwd = __dirname) {
   console.log(`\n▶ Running: ${cmd}`);
@@ -26,12 +27,12 @@ async function main() {
 
   // Step 3: Deploy AWS Serverless Stack (DynamoDB, Lambda, S3, CloudFront)
   console.log('\n[3/4] ☁️ Deploying AWS resources via Serverless Framework...');
-  run('npx serverless@3 deploy');
+  run(`npx serverless@3 deploy --aws-profile ${AWS_PROFILE}`);
 
   // Step 4: Sync frontend static files to S3
   console.log('\n[4/4] 🚀 Syncing frontend to S3 & CloudFront...');
   try {
-    const infoOutput = execSync('npx serverless@3 info --verbose', { encoding: 'utf-8' });
+    const infoOutput = execSync(`npx serverless@3 info --verbose --aws-profile ${AWS_PROFILE}`, { encoding: 'utf-8' });
     const bucketMatch = infoOutput.match(/FrontendBucketName:\s*([^\s\r\n]+)/);
     const cloudFrontMatch = infoOutput.match(/CloudFrontUrl:\s*([^\s\r\n]+)/);
     const lambdaUrlMatch = infoOutput.match(/LambdaFunctionUrl:\s*([^\s\r\n]+)/);
@@ -43,7 +44,7 @@ async function main() {
     if (bucketName) {
       console.log(`Uploading 'dist/' to s3://${bucketName}...`);
       try {
-        run(`aws s3 sync dist/ s3://${bucketName} --delete`);
+        run(`aws s3 sync dist/ s3://${bucketName} --delete --profile ${AWS_PROFILE}`);
       } catch {
         console.log(`(Notice: If 'aws' CLI is not in your PATH, run: aws s3 sync dist/ s3://${bucketName})`);
       }
